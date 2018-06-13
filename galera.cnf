@@ -1,0 +1,156 @@
+[global]
+#
+# * Fine Tuning
+#
+max_connections		= {{MYSQL_MAX_CONNECTIONS}}
+connect_timeout		= 5
+wait_timeout		= 600
+max_allowed_packet	= {{MYSQL_MAX_ALLOWED_PACKET}}
+thread_cache_size   = 64
+sort_buffer_size	= 256K
+bulk_insert_buffer_size	= 16M
+tmp_table_size		= 32M
+max_heap_table_size	= 32M
+interactive_timeout	= 7200
+join_buffer_size	= 256K
+max_statement_time	= {{MYSQL_MAX_STATEMENT_TIME}}
+transaction_isolation = READ-COMMITTED
+#
+# * MyISAM
+#
+# This replaces the startup script and checks MyISAM tables if needed
+# the first time they are touched. On error, make copy and try a repair.
+myisam_recover_options = BACKUP
+key_buffer_size		= 10M
+#open-files-limit	= 2000
+table_open_cache	= 2048
+myisam_sort_buffer_size	= 512M
+concurrent_insert	= 2
+read_buffer_size	= 2M
+read_rnd_buffer_size	= 1M
+#
+# * Query Cache Configuration
+#
+# Cache only tiny result sets, so we can fit more in the query cache.
+query_cache_limit		= {{MYSQL_QUERY_CACHE_LIMIT}}
+query_cache_size		= {{MYSQL_QUERY_CACHE_SIZE}}
+# for more write intensive setups, set to DEMAND or OFF
+query_cache_type		= ON
+#
+# * Logging and Replication
+#
+# Both location gets rotated by the cronjob.
+# Be aware that this log type is a performance killer.
+# As of 5.1 you can enable the log at runtime!
+#general_log_file        = /var/log/mysql/mysql.log
+#general_log             = 1
+#
+# Error logging goes to syslog due to /etc/mysql/conf.d/mysqld_safe_syslog.cnf.
+#
+# we do want to know about network errors and such
+log_warnings		= 2
+#
+# Enable the slow query log to see queries with especially long duration
+slow_query_log=1
+slow_query_log_file	= /var/log/mysql/mariadb-slow.log
+long_query_time = 10
+#log_slow_rate_limit	= 1000
+log_slow_verbosity	= query_plan
+
+#log-queries-not-using-indexes
+#log_slow_admin_statements
+#
+# The following can be used as easy to replay backup logs or for replication.
+# note: if you are setting up a replication slave, see README.Debian about
+#       other settings you may need to change.
+#server-id		= 1
+#report_host		= master1
+#auto_increment_increment = 2
+#auto_increment_offset	= 1
+log_bin			= /var/log/mysql/mariadb-bin
+log_bin_index		= /var/log/mysql/mariadb-bin.index
+# not fab for performance, but safer
+sync_binlog		= 0
+expire_logs_days	= 2
+max_binlog_size         = 100M
+# slaves
+#relay_log		= /var/log/mysql/relay-bin
+#relay_log_index	= /var/log/mysql/relay-bin.index
+#relay_log_info_file	= /var/log/mysql/relay-bin.info
+#log_slave_updates
+#read_only
+#
+# If applications support it, this stricter sql_mode prevents some
+# mistakes like inserting invalid dates etc.
+#sql_mode		= NO_ENGINE_SUBSTITUTION,TRADITIONAL
+#
+# * InnoDB
+#
+# InnoDB is enabled by default with a 10MB datafile in /var/lib/mysql/.
+# Read the manual for more InnoDB related options. There are many!
+default_storage_engine	= InnoDB
+# you can't just change log file size, requires special procedure
+innodb_log_file_size	= 64M
+innodb_buffer_pool_size	= {{MYSQL_INNODB_BUFFER_POOL_SIZE}}
+innodb_log_buffer_size	= 16M
+innodb_file_per_table	= 1
+innodb_open_files	= 400
+innodb_io_capacity	= 400
+innodb_flush_method	= O_DIRECT
+innodb_buffer_pool_instances = 2
+innodb_log_files_in_group = 2
+innodb_max_dirty_pages_pct = 75
+innodb_ft_cache_size = 16M
+innodb_ft_total_cache_size = 256M
+innodb_ft_min_token_size = 3
+innodb_read_io_threads = 8
+innodb_write_io_threads = 8
+innodb_lock_wait_timeout = {{MYSQL_INNODB_LOCK_WAIT_TIMEOUT}}
+innodb_checksum_algorithm = crc32
+innodb_log_checksum_algorithm = crc32
+#
+# * Security Features
+#
+# Read the manual, too, if you want chroot!
+# chroot = /var/lib/mysql/
+#
+# For generating SSL certificates I recommend the OpenSSL GUI "tinyca".
+#
+# ssl-ca=/etc/mysql/cacert.pem
+# ssl-cert=/etc/mysql/server-cert.pem
+# ssl-key=/etc/mysql/server-key.pem
+
+#
+# * Galera-related settings
+#
+[galera]
+wsrep_on=ON
+wsrep_cluster_name="{{SERVICE_NAME}}"
+wsrep_provider=/usr/lib/galera/libgalera_smm.so
+wsrep_cluster_address="{{CLUSTER_ADDRESS}}"
+wsrep_provider_options="gcs.fc_factor = {{WSREP_FC_FACTOR}}; gcs.fc_limit = {{WSREP_FC_LIMIT}}; gcache.size = 1G; evs.keepalive_period = PT2S; evs.inactive_check_period = PT5S; evs.suspect_timeout = PT10S; evs.inactive_timeout = PT30S; evs.send_window = 64; evs.user_send_window = 32; evs.install_timeout = PT15S; ist.recv_addr = {{IP_ADDRESS}}; pc.wait_prim=yes"
+wsrep_slave_threads=16
+wsrep_node_name="{{HOSTNAME}}"
+#wsrep_sst_method=xtrabackup
+#wsrep_sst_method=mysqldump
+#wsrep_sst_auth=root:{{MYSQL_ROOT_PASSWORD}}
+wsrep_sst_method=rsync
+wsrep_sst_receive_address={{IP_ADDRESS}}
+wsrep_node_address={{IP_ADDRESS}}
+wsrep_max_ws_size=2147483647
+wsrep_sync_wait={{WSREP_SYNC_WAIT}}
+innodb_doublewrite=0
+binlog_format=row
+default_storage_engine=InnoDB
+innodb_autoinc_lock_mode=2
+innodb_flush_log_at_trx_commit=2
+
+[mysqldump]
+quick
+quote-names
+
+[mysql]
+#no-auto-rehash	# faster start of mysql but no tab completion
+
+[isamchk]
+key_buffer		= 16M
