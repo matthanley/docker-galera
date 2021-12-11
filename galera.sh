@@ -23,7 +23,9 @@ if echo $* | grep -v -e '--skip-networking' | grep -v -e '--help'; then
     CLUSTER_MEMBERS=`getent hosts tasks.$SERVICE_NAME | grep -v $IP_ADDRESS | awk '{print $1}'`
     # Check we can see enough peers to form a Primary Component
     if [ `getent hosts tasks.$SERVICE_NAME | wc -l` -lt $(((${CLUSTER_NODES}+1)/2)) ]; then
-      echo "Can't see enough peers to form a cluster; restarting."
+      RESTART_DELAY=$(((1 + $RANDOM % 10)*6))
+      echo "Can't see enough peers to form a cluster; restarting in ${RESTART_DELAY} seconds."
+      sleep $RESTART_DELAY
       exit 1
     fi
     # If we're the first node then bootstrap the cluster

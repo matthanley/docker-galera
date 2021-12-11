@@ -3,9 +3,9 @@ FROM mariadb:latest
 COPY galera.cnf /etc/mysql/conf.d/galera.cnf.template
 RUN chown -R mysql:mysql /etc/mysql/conf.d
 
-# Overwrite "mysqld" so we can intercept the
+# Overwrite "mariadb" so we can intercept the
 # call from the upstream entrypoint
-COPY galera.sh /usr/local/sbin/mysqld
+COPY galera.sh /usr/local/sbin/mariadb
 
 ENV MYSQL_ROOT_PASSWORD="mariadb" \
 	MYSQL_USER="mariadb" \
